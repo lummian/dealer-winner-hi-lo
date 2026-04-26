@@ -1,0 +1,21 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+.DS_Store
+
+# IDE / editor
+.vscode/
+.idea/
+.claude/
+
+# TS build cache
+*.tsbuildinfo
+
+# OS
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
