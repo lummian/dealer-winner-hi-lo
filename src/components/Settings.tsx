@@ -19,7 +19,7 @@ export function Settings({ config, onSave, onClose }: SettingsProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950 overflow-y-auto safe-fixed">
       <div className="max-w-md mx-auto p-4 space-y-6 pb-24">
         <div className="flex items-center justify-between sticky top-0 bg-slate-950 py-2 -mx-4 px-4 border-b border-slate-800">
           <h2 className="text-xl font-bold text-white">Configuración</h2>

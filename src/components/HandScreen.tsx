@@ -53,7 +53,7 @@ export function HandScreen({ tc, rules, onClose }: HandScreenProps) {
   const isDeviation = result.baseAction !== result.finalAction;
 
   return (
-    <div className="fixed inset-0 z-40 bg-slate-950 overflow-y-auto">
+    <div className="fixed inset-0 z-40 bg-slate-950 overflow-y-auto safe-fixed">
       <div className="max-w-md mx-auto p-3 space-y-3 pb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">¿Qué hago?</h2>
