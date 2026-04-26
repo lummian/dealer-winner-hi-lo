@@ -150,7 +150,7 @@ export function App() {
         ))}
       </section>
 
-      <footer className="px-3 py-3 grid grid-cols-3 gap-2 sticky bottom-0 bg-slate-950 border-t border-slate-800">
+      <footer className="px-3 pt-3 pb-3 grid grid-cols-3 gap-2 sticky bottom-0 bg-slate-950 border-t border-slate-800 safe-bottom">
         <button
           onClick={handleUndo}
           disabled={shoe.history.length === 0}
