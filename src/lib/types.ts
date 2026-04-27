@@ -52,3 +52,20 @@ export interface ShoeState {
   runningCount: number;
   history: CardEvent[];
 }
+
+export interface ShoeRecord {
+  id: string;
+  startedAt: number;
+  endedAt: number;
+  startBalance: number;
+  endBalance: number;
+  netUnits: number;
+  unitSize: number;
+  cardsDealt: number;
+  totalCards: number;
+  rules: TableRules;
+  shoeQualityScore: number;
+  shoeQualityLabel: string;
+  heatAbove2: number;
+  maxTC: number;
+}

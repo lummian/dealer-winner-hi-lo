@@ -4,6 +4,7 @@ import { StatTile } from './components/StatTile';
 import { Settings } from './components/Settings';
 import { HandScreen } from './components/HandScreen';
 import { ShoeAnalytics } from './components/ShoeAnalytics';
+import { EndShoeDialog } from './components/EndShoeDialog';
 import {
   COUNT_VALUES,
   RANKS,
@@ -19,13 +20,24 @@ import {
 } from './lib/counting';
 import { recommendBet } from './lib/betting';
 import { loadConfig, loadShoe, saveConfig, saveShoe } from './lib/storage';
-import type { AppConfig, Rank, ShoeState } from './lib/types';
+import {
+  appendShoeRecord,
+  loadHistory,
+  loadOpenBalance,
+  saveOpenBalance,
+  summarizeSession
+} from './lib/history';
+import { analyzeShoe } from './lib/analytics';
+import type { AppConfig, Rank, ShoeRecord, ShoeState } from './lib/types';
 
 export function App() {
   const [config, setConfig] = useState<AppConfig>(() => loadConfig());
   const [shoe, setShoe] = useState<ShoeState>(() => loadShoe(loadConfig().rules.decks));
   const [showSettings, setShowSettings] = useState(false);
   const [showHand, setShowHand] = useState(false);
+  const [showEndShoe, setShowEndShoe] = useState(false);
+  const [history, setHistory] = useState<ShoeRecord[]>(() => loadHistory());
+  const [openBalance, setOpenBalance] = useState<number | null>(() => loadOpenBalance());
 
   useEffect(() => { saveConfig(config); }, [config]);
   useEffect(() => { saveShoe(shoe); }, [shoe]);
@@ -50,10 +62,49 @@ export function App() {
   };
 
   const handleReshuffle = () => {
-    if (confirm('¿Barajar de nuevo? Se reinicia el conteo.')) {
+    if (shoe.history.length === 0) {
       setShoe(newShoe(config.rules.decks));
+      return;
     }
+    setShowEndShoe(true);
   };
+
+  const handleEndShoeConfirm = (startBalance: number, endBalance: number) => {
+    const analytics = analyzeShoe(shoe, config.rules);
+    const unitSize = config.betting.unitSize > 0 ? config.betting.unitSize : 1;
+    const netUnits = (endBalance - startBalance) / unitSize;
+    const startedAt = shoe.history[0]?.ts ?? Date.now();
+    const endedAt = Date.now();
+    const record: ShoeRecord = {
+      id: `${endedAt}`,
+      startedAt,
+      endedAt,
+      startBalance,
+      endBalance,
+      netUnits: Math.round(netUnits * 10) / 10,
+      unitSize,
+      cardsDealt: shoe.dealtCount,
+      totalCards: shoe.totalCards,
+      rules: config.rules,
+      shoeQualityScore: analytics.shoeQualityScore,
+      shoeQualityLabel: analytics.shoeQualityLabel,
+      heatAbove2: analytics.heatRatio.above2,
+      maxTC: analytics.maxTC
+    };
+    const next = appendShoeRecord(record);
+    setHistory(next);
+    setOpenBalance(endBalance);
+    saveOpenBalance(endBalance);
+    setShoe(newShoe(config.rules.decks));
+    setShowEndShoe(false);
+  };
+
+  const handleEndShoeSkip = () => {
+    setShoe(newShoe(config.rules.decks));
+    setShowEndShoe(false);
+  };
+
+  const session = useMemo(() => summarizeSession(history), [history]);
 
   const handleSaveConfig = (next: AppConfig) => {
     const decksChanged = next.rules.decks !== config.rules.decks;
@@ -141,7 +192,7 @@ export function App() {
       )}
 
       <section className="px-3 mt-2">
-        <ShoeAnalytics shoe={shoe} rules={config.rules} />
+        <ShoeAnalytics shoe={shoe} rules={config.rules} session={session} unitSize={config.betting.unitSize} />
       </section>
 
       <section className="px-3 mt-3 grid grid-cols-5 gap-1.5 flex-1 content-start">
@@ -182,6 +233,10 @@ export function App() {
           config={config}
           onSave={handleSaveConfig}
           onClose={() => setShowSettings(false)}
+          onSessionCleared={() => {
+            setHistory([]);
+            setOpenBalance(null);
+          }}
         />
       )}
 
@@ -190,6 +245,16 @@ export function App() {
           tc={tc}
           rules={config.rules}
           onClose={() => setShowHand(false)}
+        />
+      )}
+
+      {showEndShoe && (
+        <EndShoeDialog
+          unitSize={config.betting.unitSize}
+          initialStartBalance={openBalance}
+          onConfirm={handleEndShoeConfirm}
+          onSkip={handleEndShoeSkip}
+          onCancel={() => setShowEndShoe(false)}
         />
       )}
     </div>

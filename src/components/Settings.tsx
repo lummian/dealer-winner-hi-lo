@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react';
 import type { AppConfig, BettingMode, CountingSystem } from '../lib/types';
 import { SYSTEM_LABELS } from '../lib/counting';
+import { clearHistory, loadHistory, saveOpenBalance } from '../lib/history';
 
 interface SettingsProps {
   config: AppConfig;
   onSave: (cfg: AppConfig) => void;
   onClose: () => void;
+  onSessionCleared: () => void;
 }
 
-export function Settings({ config, onSave, onClose }: SettingsProps) {
+export function Settings({ config, onSave, onClose, onSessionCleared }: SettingsProps) {
   const [draft, setDraft] = useState<AppConfig>(config);
+  const [recordCount, setRecordCount] = useState<number>(() => loadHistory().length);
+
+  const handleClearSession = () => {
+    if (recordCount === 0) return;
+    if (!confirm(`¿Borrar ${recordCount} ${recordCount === 1 ? 'zapato' : 'zapatos'} de la sesión actual? El balance de cierre también se reinicia.`)) return;
+    clearHistory();
+    saveOpenBalance(null);
+    setRecordCount(0);
+    onSessionCleared();
+  };
 
   const updateBetting = <K extends keyof AppConfig['betting']>(key: K, value: AppConfig['betting'][K]) => {
     setDraft({ ...draft, betting: { ...draft.betting, [key]: value } });
@@ -92,6 +104,22 @@ export function Settings({ config, onSave, onClose }: SettingsProps) {
             min={-5} max={5} step={1}
             onChange={(v) => updateBetting('wongOutTC', v)}
           />
+        </Section>
+
+        <Section title="Sesión / historial">
+          <div className="text-xs text-slate-400">
+            {recordCount === 0
+              ? 'No hay zapatos registrados todavía.'
+              : `${recordCount} ${recordCount === 1 ? 'zapato registrado' : 'zapatos registrados'} en la sesión actual.`}
+          </div>
+          <button
+            type="button"
+            onClick={handleClearSession}
+            disabled={recordCount === 0}
+            className="w-full py-2.5 rounded-lg bg-rose-700 text-white font-semibold disabled:bg-slate-800 disabled:text-slate-600 active:bg-rose-600"
+          >
+            Limpiar historial
+          </button>
         </Section>
 
         <Section title="Modo de bet sizing">

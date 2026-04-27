@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import type { ShoeState, TableRules } from '../lib/types';
 import { analyzeShoe, type ShoeQualityLabel } from '../lib/analytics';
+import type { SessionSummary } from '../lib/history';
 
 interface ShoeAnalyticsProps {
   shoe: ShoeState;
   rules: TableRules;
+  session: SessionSummary;
+  unitSize: number;
 }
 
 const LABEL_COLOR: Record<ShoeQualityLabel, string> = {
@@ -15,12 +18,28 @@ const LABEL_COLOR: Record<ShoeQualityLabel, string> = {
   'sin datos': 'bg-slate-700 text-slate-300'
 };
 
-export function ShoeAnalytics({ shoe, rules }: ShoeAnalyticsProps) {
+export function ShoeAnalytics({ shoe, rules, session, unitSize }: ShoeAnalyticsProps) {
   const [expanded, setExpanded] = useState(false);
   const a = analyzeShoe(shoe, rules);
+  const sessionTone =
+    session.totalNetUnits > 0 ? 'text-emerald-400' :
+    session.totalNetUnits < 0 ? 'text-rose-400' : 'text-slate-300';
 
   return (
     <div className="bg-slate-900 rounded-lg overflow-hidden">
+      {session.shoeCount > 0 && (
+        <div className="px-3 py-1.5 bg-slate-800/60 flex items-center justify-between text-[11px] border-b border-slate-800">
+          <span className="text-slate-400">
+            Sesión <span className="text-slate-300 tabular-nums">({session.shoeCount} {session.shoeCount === 1 ? 'zapato' : 'zapatos'})</span>
+          </span>
+          <span className={`font-bold tabular-nums ${sessionTone}`}>
+            {session.totalNetUnits >= 0 ? '+' : ''}{session.totalNetUnits.toFixed(1)}u{' '}
+            <span className="opacity-80">
+              ({session.totalNetMoney >= 0 ? '+' : ''}${Math.round(session.totalNetMoney).toLocaleString()})
+            </span>
+          </span>
+        </div>
+      )}
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -49,6 +68,19 @@ export function ShoeAnalytics({ shoe, rules }: ShoeAnalyticsProps) {
 
       {expanded && (
         <div className="px-3 pb-3 space-y-3 border-t border-slate-800 pt-3">
+          {session.shoeCount > 0 && (
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
+                Sesión — {session.shoeCount} {session.shoeCount === 1 ? 'zapato' : 'zapatos'}{unitSize > 0 ? ` · u=$${unitSize}` : ''}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Stat label="Mejor zapato" value={`${session.bestShoeUnits >= 0 ? '+' : ''}${session.bestShoeUnits.toFixed(1)}u`} />
+                <Stat label="Peor zapato" value={`${session.worstShoeUnits >= 0 ? '+' : ''}${session.worstShoeUnits.toFixed(1)}u`} />
+                <Stat label="Promedio/zapato" value={`${session.avgUnitsPerShoe >= 0 ? '+' : ''}${session.avgUnitsPerShoe.toFixed(2)}u`} />
+                <Stat label="Score promedio" value={session.avgScore.toFixed(0)} />
+              </div>
+            </div>
+          )}
           <div>
             <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1.5">
               Heat — % cartas con TC ≥ X
