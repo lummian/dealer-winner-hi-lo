@@ -3,6 +3,7 @@ import { CardButton } from './components/CardButton';
 import { StatTile } from './components/StatTile';
 import { Settings } from './components/Settings';
 import { HandScreen } from './components/HandScreen';
+import { ShoeAnalytics } from './components/ShoeAnalytics';
 import {
   COUNT_VALUES,
   RANKS,
@@ -138,6 +139,10 @@ export function App() {
           ⚠ Penetración alcanzada ({config.rules.penetrationPct}%) — el dealer debería barajar pronto.
         </div>
       )}
+
+      <section className="px-3 mt-2">
+        <ShoeAnalytics shoe={shoe} rules={config.rules} />
+      </section>
 
       <section className="px-3 mt-3 grid grid-cols-5 gap-1.5 flex-1 content-start">
         {RANKS.map((rank) => (
