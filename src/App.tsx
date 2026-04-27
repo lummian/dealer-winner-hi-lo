@@ -65,8 +65,8 @@ export function App() {
   const edgeTone = edge >= 1 ? 'hot' : edge > 0 ? 'good' : edge < 0 ? 'bad' : 'neutral';
 
   return (
-    <div className="min-h-full bg-slate-950 text-white flex flex-col">
-      <header className="px-3 pt-3 pb-2 flex items-center justify-between">
+    <div className="flex-1 bg-slate-950 text-white flex flex-col">
+      <header className="px-3 pt-3 pb-2 flex items-center justify-between safe-top">
         <div className="flex items-baseline gap-2">
           <h1 className="text-lg font-bold">Dealer Winner</h1>
           <span className="text-xs text-slate-400">{SYSTEM_LABELS[config.system]}</span>
