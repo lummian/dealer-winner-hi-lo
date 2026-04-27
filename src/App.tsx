@@ -5,6 +5,7 @@ import { Settings } from './components/Settings';
 import { HandScreen } from './components/HandScreen';
 import { ShoeAnalytics } from './components/ShoeAnalytics';
 import { EndShoeDialog } from './components/EndShoeDialog';
+import { StartShoeDialog } from './components/StartShoeDialog';
 import {
   COUNT_VALUES,
   RANKS,
@@ -36,6 +37,7 @@ export function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showHand, setShowHand] = useState(false);
   const [showEndShoe, setShowEndShoe] = useState(false);
+  const [showStartShoe, setShowStartShoe] = useState(false);
   const [history, setHistory] = useState<ShoeRecord[]>(() => loadHistory());
   const [openBalance, setOpenBalance] = useState<number | null>(() => loadOpenBalance());
 
@@ -69,7 +71,9 @@ export function App() {
     setShowEndShoe(true);
   };
 
-  const handleEndShoeConfirm = (startBalance: number, endBalance: number) => {
+  const handleEndShoeConfirm = (endBalance: number) => {
+    if (openBalance === null) return;
+    const startBalance = openBalance;
     const analytics = analyzeShoe(shoe, config.rules);
     const unitSize = config.betting.unitSize > 0 ? config.betting.unitSize : 1;
     const netUnits = (endBalance - startBalance) / unitSize;
@@ -102,6 +106,12 @@ export function App() {
   const handleEndShoeSkip = () => {
     setShoe(newShoe(config.rules.decks));
     setShowEndShoe(false);
+  };
+
+  const handleStartShoeConfirm = (balance: number) => {
+    setOpenBalance(balance);
+    saveOpenBalance(balance);
+    setShowStartShoe(false);
   };
 
   const session = useMemo(() => summarizeSession(history), [history]);
@@ -191,6 +201,17 @@ export function App() {
         </div>
       )}
 
+      {openBalance === null && (
+        <button
+          type="button"
+          onClick={() => setShowStartShoe(true)}
+          className="mx-3 mt-2 px-3 py-2 rounded-lg bg-emerald-700/30 border border-emerald-600 text-emerald-100 text-xs flex items-center justify-between active:bg-emerald-700/50"
+        >
+          <span>💰 Anotá tu balance inicial para trackear este zapato</span>
+          <span className="font-bold">›</span>
+        </button>
+      )}
+
       <section className="px-3 mt-2">
         <ShoeAnalytics shoe={shoe} rules={config.rules} session={session} unitSize={config.betting.unitSize} />
       </section>
@@ -251,10 +272,18 @@ export function App() {
       {showEndShoe && (
         <EndShoeDialog
           unitSize={config.betting.unitSize}
-          initialStartBalance={openBalance}
+          startBalance={openBalance}
           onConfirm={handleEndShoeConfirm}
           onSkip={handleEndShoeSkip}
           onCancel={() => setShowEndShoe(false)}
+        />
+      )}
+
+      {showStartShoe && (
+        <StartShoeDialog
+          unitSize={config.betting.unitSize}
+          onConfirm={handleStartShoeConfirm}
+          onCancel={() => setShowStartShoe(false)}
         />
       )}
     </div>
